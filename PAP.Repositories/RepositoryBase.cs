@@ -1,8 +1,10 @@
 ﻿using PAP.DataAccess;
 using PAP.DataAccess.Entities;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace PAP.Repositories
 {
@@ -79,7 +81,7 @@ namespace PAP.Repositories
         /// Retrieves all entities of type T from the database.
         /// </summary>
         /// <returns>A collection of all entities</returns>
-        public IEnumerable<T> GetAll()
+        public virtual IEnumerable<T> GetAll()
         {
             return _set.ToList();
         }
@@ -89,7 +91,7 @@ namespace PAP.Repositories
         /// </summary>
         /// <param name="id">The unique identifier of the entity to retrieve</param>
         /// <returns>The entity with the specified ID, or null if not found</returns>
-        public T GetById(int id)
+        public virtual T GetById(int id)
         {
             return _set.Find(id);
         }
@@ -121,7 +123,7 @@ namespace PAP.Repositories
         /// Deletes an entity from the database by its unique identifier and saves changes immediately.
         /// </summary>
         /// <param name="id">The unique identifier of the entity to delete</param>
-        public void Delete(int id)
+        public virtual void Delete(int id)
         {
             T entityToDelete = _set.Find(id);
             if (entityToDelete != null)
@@ -129,6 +131,14 @@ namespace PAP.Repositories
                 _set.Remove(entityToDelete);
                 Save();
             }
+        }
+
+        /// <summary>
+        /// Proyecta solo las columnas necesarias (por ejemplo para llenar dropdowns) sin cargar entidades completas.
+        /// </summary>
+        public IEnumerable<TResult> Project<TResult>(Expression<Func<T, TResult>> selector)
+        {
+            return _set.Select(selector).ToList();
         }
 
         /// <summary>

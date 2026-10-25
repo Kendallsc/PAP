@@ -1,21 +1,17 @@
-﻿
-using PAP.DataAccess;
-using System.Collections;
+﻿using PAP.DataAccess;
+using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 
 namespace PAP.Repositories
 {
     public class BookRepository : RepositoryBase<Book>
     {
-        public IEnumerable<Book> MyBooks()
+        // Carga las entidades relacionadas que muestra la vista Index (evita N+1 consultas)
+        public override IEnumerable<Book> GetAll()
         {
-            // queryable
-            var test = from x in _context.Books
-                       where !x.IsInStock && x.Name.Contains("a")
-                       select x;
-
-            return test.ToList();
+            return _set.Include(x => x.Category1).Include(x => x.Genre1).Include(x => x.Publisher1).ToList();
         }
     }
 }

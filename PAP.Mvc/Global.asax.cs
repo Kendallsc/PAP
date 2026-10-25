@@ -16,6 +16,10 @@ namespace PAP.Mvc
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            // Los inputs number envian decimales con punto: se leen en cultura invariante
+            System.Web.Mvc.ModelBinders.Binders.Add(typeof(decimal), new PAP.Mvc.ModelBinders.InvariantDecimalModelBinder());
+            System.Web.Mvc.ModelBinders.Binders.Add(typeof(decimal?), new PAP.Mvc.ModelBinders.InvariantDecimalModelBinder());
         }
     }
 }

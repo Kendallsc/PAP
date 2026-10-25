@@ -1,7 +1,7 @@
 ﻿using PAP.DataAccess;
 using PAP.Repositories;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 
 namespace PAP.Business
@@ -15,79 +15,105 @@ namespace PAP.Business
             _repository = new BookRepository();
         }
 
+        public IEnumerable<Book> GetAll()
+        {
+            return _repository.GetAll();
+        }
+
+        public Book GetById(int id)
+        {
+            return _repository.GetById(id);
+        }
+
+        // Se conserva el metodo original usado por LibraryController
         public IEnumerable<Book> GetAllBooksFromDataModel()
         {
-            var books = _repository.GetAll();
+            return _repository.GetAll();
+        }
 
-            // DOT NOTATION
-            // Multiple Enumeration / Deferred Execution
+        public void Add(Book entity)
+        {
+            if (entity == null)
+                throw new ArgumentNullException("entity");
 
+            DateTime now = DateTime.UtcNow;
+            entity.CreatedAt = now;
+            entity.UpdatedAt = now;
 
+            if (string.IsNullOrWhiteSpace(entity.Name))
+                entity.Name = entity.Title;
+            SyncLegacyNames(entity);
 
-            var myEnumerable= books
-                .Where(x => x.IsInStock && x.Price > 20)
-                .Where(x => x.Name.Contains("a"))
-                .Where(x => x.Category == "Fiction")
-                .Select(x => new Book
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Title = x.Title,
-                    Category = x.Category,
-                    Publisher = x.Publisher,
-                    Author = x.Author,
-                    Description = x.Description,
-                    PublicationDate = x.PublicationDate,
-                    Height = x.Height,
-                    Width = x.Width,
-                    Price = x.Price,
-                    IsBestSeller = x.IsBestSeller,
-                    Genre = x.Genre,
-                    IsInStock = x.IsInStock,
-                    CreatedAt = x.CreatedAt,
-                    UpdatedAt = x.UpdatedAt
-                });
+            _repository.Add(entity);
+        }
 
-            // 10,000 || 100,000
-            // for (Kb time) = i F(x)
-            // foreach (^ Kb time) objects i=0 | x = object[i] | F(x) = x.Price > 50
-            // Linq.ForEach
+        public void Update(Book entity)
+        {
+            if (entity == null)
+                throw new ArgumentNullException("entity");
 
-            // Francisco Rojas = 001110101000010000100010 /  1
+            Book existing = _repository.GetById(entity.Id);
+            if (existing == null)
+                throw new InvalidOperationException("El registro ya no existe.");
 
-            // quick sort / topo sort / merge sort / bubble sort / insertion sort / selection sort
-            // binary srch / linear search / hash table / dictionary / set / list / array / linked list
-            // queues / stacks / trees / graphs
+            existing.Title = entity.Title;
+            existing.Name = entity.Name;
+            existing.Author = entity.Author;
+            existing.Description = entity.Description;
+            existing.PublicationDate = entity.PublicationDate;
+            existing.Height = entity.Height;
+            existing.Width = entity.Width;
+            existing.Price = entity.Price;
+            existing.IsBestSeller = entity.IsBestSeller;
+            existing.IsInStock = entity.IsInStock;
+            existing.PublisherId = entity.PublisherId;
+            existing.CategoryId = entity.CategoryId;
+            existing.GenreId = entity.GenreId;
+            existing.ISBN = entity.ISBN;
+            existing.Pages = entity.Pages;
+            existing.Language = entity.Language;
+            existing.CoverImageUrl = entity.CoverImageUrl;
+            if (string.IsNullOrWhiteSpace(existing.Name))
+                existing.Name = existing.Title;
+            SyncLegacyNames(existing);
+            existing.UpdatedAt = DateTime.UtcNow;
 
-            foreach (var book in myEnumerable)
+            _repository.Update(existing);
+        }
+
+        public void Delete(int id)
+        {
+            _repository.Delete(id);
+        }
+
+        // Pares Id / texto para llenar los dropdowns de las demas pantallas
+        public IEnumerable<KeyValuePair<int, string>> GetOptions()
+        {
+            return _repository.Project(x => new { x.Id, x.Title })
+                .Select(a => new KeyValuePair<int, string>(a.Id, a.Title))
+                .OrderBy(o => o.Value)
+                .ToList();
+        }
+
+        // Las columnas de texto Publisher / Category / Genre se mantienen sincronizadas
+        // con los nombres de las nuevas llaves foraneas (la tabla Books ya existia).
+        private static void SyncLegacyNames(Book book)
+        {
+            if (book.PublisherId.HasValue)
             {
-                if(book.Price > 50)
-                {
-                    book.IsBestSeller = true;
-                }   
-                yield return book;
+                Publisher publisher = new PublisherRepository().GetById(book.PublisherId.Value);
+                if (publisher != null) book.Publisher = publisher.Name;
             }
-            /*return from x in books
-                   where x.IsInStock && x.Price > 20
-                   select new Book
-                   {
-                       Id = x.Id,
-                       Name = x.Name,
-                       Title = x.Title,
-                       Category = x.Category,
-                       Publisher = x.Publisher,
-                       Author = x.Author,
-                       Description = x.Description,
-                       PublicationDate = x.PublicationDate,
-                       Height = x.Height,
-                       Width = x.Width,
-                       Price = x.Price,
-                       IsBestSeller = x.IsBestSeller,
-                       Genre = x.Genre,
-                       IsInStock = x.IsInStock,
-                       CreatedAt = x.CreatedAt,
-                       UpdatedAt = x.UpdatedAt
-                   };*/
-        }   
+            if (book.CategoryId.HasValue)
+            {
+                Category category = new CategoryRepository().GetById(book.CategoryId.Value);
+                if (category != null) book.Category = category.Name;
+            }
+            if (book.GenreId.HasValue)
+            {
+                Genre genre = new GenreRepository().GetById(book.GenreId.Value);
+                if (genre != null) book.Genre = genre.Name;
+            }
+        }
     }
 }

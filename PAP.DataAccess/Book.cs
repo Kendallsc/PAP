@@ -14,6 +14,17 @@ namespace PAP.DataAccess
     
     public partial class Book
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public Book()
+        {
+            this.BookAuthors = new HashSet<BookAuthor>();
+            this.CartItems = new HashSet<CartItem>();
+            this.Inventories = new HashSet<Inventory>();
+            this.OrderItems = new HashSet<OrderItem>();
+            this.PurchaseOrderItems = new HashSet<PurchaseOrderItem>();
+            this.Reviews = new HashSet<Review>();
+        }
+    
         public int Id { get; set; }
         public string Name { get; set; }
         public string Title { get; set; }
@@ -30,5 +41,22 @@ namespace PAP.DataAccess
         public bool IsInStock { get; set; }
         public System.DateTime CreatedAt { get; set; }
         public System.DateTime UpdatedAt { get; set; }
+        public Nullable<int> PublisherId { get; set; }
+        public Nullable<int> CategoryId { get; set; }
+        public Nullable<int> GenreId { get; set; }
+        public string ISBN { get; set; }
+        public Nullable<int> Pages { get; set; }
+        public string Language { get; set; }
+        public string CoverImageUrl { get; set; }
+    
+        public virtual ICollection<BookAuthor> BookAuthors { get; set; }
+        public virtual ICollection<CartItem> CartItems { get; set; }
+        public virtual ICollection<Inventory> Inventories { get; set; }
+        public virtual ICollection<OrderItem> OrderItems { get; set; }
+        public virtual ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; }
+        public virtual ICollection<Review> Reviews { get; set; }
+        public virtual Category Category1 { get; set; }
+        public virtual Genre Genre1 { get; set; }
+        public virtual Publisher Publisher1 { get; set; }
     }
 }
